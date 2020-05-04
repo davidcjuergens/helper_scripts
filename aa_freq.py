@@ -1,17 +1,9 @@
 from pyrosetta import *
 import os
 init()
+
 import numpy as np
 import json
-
-# some conversion dictionaries 
-aas = 'ARNDCEQGHILKMFPSTWYV'
-aas = [char for char in aas]
-# dict for turing letter into a single number
-aa2idx = {char:i for i, char in enumerate(aas)}
-idx2aa = {i:char for i, char in enumerate(aas)}
-
-
 
 
 def get_pdb_list(path):
@@ -19,53 +11,78 @@ def get_pdb_list(path):
     List of all pdbs in a folder.
     """
     print(os.listdir(path))
-    return [path + '/' + p for p in os.listdir(path) if 'npz' in p]
+    return [path + '/' + p for p in os.listdir(path) if 'pdb' in p]
 
-def count_aa(npz):
+
+def append_protein_residues(pdb, count_dict):
     """
-    Counts the amino acids in a single pose
+    Given the path to a pdb, count all the amino acids and return a dictionary of
+    the counts.
     """
-    data = np.load(npz)
+    pose = pose_from_pdb(pdb)
+    res = pyrosetta.rosetta.core.pose.nres_protein(pose) # number of residues
+    for i in range(1, nres+1):
+        r = pose.residue(i)     # residue obj
+        rname = r.name()[:3]    # residue name
 
-    seq = str(data['seq'])
+        count_dict['rname'] += 1
 
-    start_count = {char:i for i, char in enumerate(aas)}
+    return count_dict
 
-    for aa in seq:
-        start_count[aa] += 1
 
-    return start_count
-
-def total_aa_freq(path):
+def normalize_frequencies(count_dict):
     """
-    Count all the amino acids in a folder of pdbs. Return relative frequencies 
+    Given the total counts of all residues in a set, return a dictionary of their
+    normalized frequencies summing to 1.
     """
-    master_count = {char:i for i, char in enumerate(aas)}
-    npzs = get_pdb_list(path)
+    total = 0.
+    frequencies = {}
+    for key in count_dict.keys():
+        total += count_dict[key]
+        frequencies[key] = 0
 
-    for npz in npzs:
+    for key in frequencies.keys():
+        frequencies[key] = count_dict[key] / total
 
-        aa_dict = count_aa(npz)
-        for aa in aa_dict.keys():
-            master_count[aa] += aa_dict[aa]
+    return frequencies
 
-    # at this point master_count should have a count of all amino acids
 
-    total_residues = np.sum(master_count[key] for key in master_count.keys())
+def make_json_frequencies(input_folder, output_name):
+    # add a command line argument parser here
+    # path = args.path
 
-    master_count = {key:master_count[key]/total_residues for key in master_count.keys()}
+    # some conversion dictionaries
+    alpha_1 = list("ARNDCQEGHILKMFPSTWYV-")
+    states = len(alpha_1)
+    alpha_3 = ['ALA','ARG','ASN','ASP','CYS','GLN','GLU','GLY','HIS','ILE',
+               'LEU','LYS','MET','PHE','PRO','SER','THR','TRP','TYR','VAL','GAP']
 
-    return master_count
+    aa_1_N = {a:n for n,a in enumerate(alpha_1)}
+    aa_N_1 = {n:a for n,a in enumerate(alpha_1)}
+    aa_1_3 = {a:b for a,b in zip(alpha_1,alpha_3)}
+    aa_3_1 = {b:a for a,b in zip(alpha_1,alpha_3)}
+
+    # starting counts for all amino acids in set
+    total_counts = {aa:0 for aa in alpha_3}
+
+    # get the pdb_list
+    pdb_list = get_pdb_list(input_foler)
+
+    # add up the occurence of every AA in a pose
+    for pdb in pdb_list:
+        total_counts = append_protein_residues(pdb, total_counts)
+
+
+    frequencies = normalize_frequencies(total_counts)
+
+    with open(output_name, 'w') as f:
+        json.dump(frequencies, f)
+
 
 def main():
-    path = '/home/davidcj/input_features/900_centroid_features_train'
+    input_folder = ''
+    output_name = ''
 
-    freqs = total_aa_freq(path)
-    print('THIS IS FREQS')
-    print(freqs)
+    make_json_frequencies(input_folder, output_name)
 
-    with open('freqs_900.json', 'w') as f:
-        json.dump(freqs, f)
-    
-
-main()    
+main()
