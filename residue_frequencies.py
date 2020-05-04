@@ -80,8 +80,26 @@ def make_json_frequencies(input_folder, output_name):
 
 
 def main():
-    input_folder = ''
-    output_name = ''
+    parser = argparse.ArgumentParser(description="Amino acid frequency calculator for pdbs in folder",
+                                     epilog="Have fun")
+
+    parser.add_argument('--path',
+                        '-p',
+                        action='store',
+                        type=str,
+                        help='Path to source pdbs from.')
+    
+    parse.add_argument('--out',
+                       '-o',
+                       action='store',
+                       type=str,
+                       default='freqs.json',
+                       help='Path to output json file'.)
+    
+    args = parser.parse_args()
+    
+    input_folder = args.path
+    output_name = args.out
 
     make_json_frequencies(input_folder, output_name)
 
