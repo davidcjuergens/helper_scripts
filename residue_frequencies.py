@@ -4,6 +4,7 @@ init()
 
 import numpy as np
 import json
+import argparse
 
 
 def get_pdb_list(path):
@@ -20,12 +21,12 @@ def append_protein_residues(pdb, count_dict):
     the counts.
     """
     pose = pose_from_pdb(pdb)
-    res = pyrosetta.rosetta.core.pose.nres_protein(pose) # number of residues
+    nres = pyrosetta.rosetta.core.pose.nres_protein(pose) # number of residues
     for i in range(1, nres+1):
         r = pose.residue(i)     # residue obj
         rname = r.name()[:3]    # residue name
 
-        count_dict['rname'] += 1
+        count_dict[rname] += 1
 
     return count_dict
 
@@ -66,10 +67,11 @@ def make_json_frequencies(input_folder, output_name):
     total_counts = {aa:0 for aa in alpha_3}
 
     # get the pdb_list
-    pdb_list = get_pdb_list(input_foler)
+    pdb_list = get_pdb_list(input_folder)
 
     # add up the occurence of every AA in a pose
-    for pdb in pdb_list:
+    for i, pdb in enumerate(pdb_list):
+        print('On protein {}.'.format(i))
         total_counts = append_protein_residues(pdb, total_counts)
 
 
@@ -89,12 +91,12 @@ def main():
                         type=str,
                         help='Path to source pdbs from.')
     
-    parse.add_argument('--out',
-                       '-o',
-                       action='store',
-                       type=str,
-                       default='freqs.json',
-                       help='Path to output json file'.)
+    parser.add_argument('--out',
+                        '-o',
+                        action='store',
+                        type=str,
+                        default='freqs.json',
+                        help='Path to output json file.')
     
     args = parser.parse_args()
     
