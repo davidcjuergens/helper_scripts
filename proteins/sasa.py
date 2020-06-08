@@ -7,6 +7,7 @@ import os
 
 from pyrosetta import *
 from pyrosetta.rosetta import *
+from pyrosetta.rosetta.core.pose import remove_nonprotein_residues
 
 
 def residue_sasas(pdb):
@@ -18,11 +19,15 @@ def residue_sasas(pdb):
         pdb (str, required): path to the pdb to be analyzed
 
     Returns:
-        dict: keys are residue number, values are solven accesible surface area 
+        dict: keys are residue number, values are solven accesible surface area
     """
 
-    # create pose, rename sasa calculator
+    # create pose, rename sasa calculator, score pose
     pose = pose_from_pdb(pdb)
+    remove_nonprotein_residues(pose)
+    scorefxn = get_fa_scorefxn()
+    scorefxn(pose)
+
     sasa_calc = protocols.vardist_solaccess.VarSolDistSasaCalculator()
     # create sasas map
     sasa_map = sasa_calc.calculate(pose)
