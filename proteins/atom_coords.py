@@ -2,6 +2,7 @@
 import numpy as np
 import string, sys, getopt
 
+alpha_1 = list("ARNDCQEGHILKMFPSTWYV-")
 states = len(alpha_1)
 alpha_3 = ['ALA','ARG','ASN','ASP','CYS','GLN','GLU','GLY','HIS','ILE',
            'LEU','LYS','MET','PHE','PRO','SER','THR','TRP','TYR','VAL','GAP']
