@@ -8,6 +8,7 @@ import os
 from pyrosetta import *
 from pyrosetta.rosetta import *
 from pyrosetta.rosetta.core.pose import remove_nonprotein_residues
+init('-mute all')
 
 
 def residue_sasas(pdb):
