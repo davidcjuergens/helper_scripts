@@ -1,3 +1,4 @@
+# This script was originally written by Sergey Ovchinnikov 
 # load libraries
 import numpy as np
 import string, sys, getopt
